@@ -64,17 +64,17 @@ def scrape_data():
       except Exception:
         return "0"
 
+    # Perbaikan selector agar tepat mengambil angka dari laman MONIPAD
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "upt_hari_ini": get_text_safe("#uptHariIni div[class*='inner']"),
-        "upt_sd_hari_ini": get_text_safe("#uptSdHariIni div[class*='inner']"),
-        "upt_hit_target": get_text_safe("#hitTarget div div:nth-of-type(2)"),
-        "upt_pen_target": get_text_safe("#penTarget div div:nth-of-type(2)"),
-        "upt_pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
-        "upt_pen_jenis": get_text_safe("#penJenis div div:nth-of-type(2)"),
-        "upt_pen_periode": get_text_safe(
-            "#penTanggalPeriode div div:nth-of-type(2)"
-        ),
+        # Mengambil teks di dalam kotak kartu UPT
+        "upt_hari_ini": get_text_safe("#uptHariIni"),
+        "upt_sd_hari_ini": get_text_safe("#uptSdHariIni"),
+        "upt_hit_target": get_text_safe("#hitTarget"),
+        "upt_pen_target": get_text_safe("#penTarget"),
+        "upt_pen_total": get_text_safe("#penTotal"),
+        "upt_pen_jenis": get_text_safe("#penJenis"),
+        "upt_pen_periode": get_text_safe("#penTanggalPeriode"),
     }
 
     print("SUKSES! Semua data berhasil ditarik:", new_data)
