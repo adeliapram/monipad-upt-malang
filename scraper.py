@@ -7,8 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
 LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/login"
@@ -32,47 +31,34 @@ def scrape_data():
   )
 
   try:
-    print("Membuka halaman login...")
+    print("1. Membuka halaman login...")
     driver.get(LOGIN_URL)
-
-    wait = WebDriverWait(driver, 15)
-    print("Menunggu form login...")
-    username_field = wait.until(
-        EC.presence_of_element_located((By.ID, "login_user"))
-    )
-    password_field = driver.find_element(By.ID, "login_pass")
-
-    print("Mengisi form login...")
-    username_field.send_keys(USERNAME)
-    password_field.send_keys(PASSWORD)
-
-    print("Mengklik tombol login...")
-    submit_btn = driver.find_element(
-        By.XPATH, '//button[@type="submit"] | //input[@type="submit"] | //button'
-    )
-    submit_btn.click()
-
-    print("Menunggu halaman dashboard termuat...")
-    time.sleep(7)  # Jeda aman untuk proses login selesai
-
-    print("Membuka URL dashboard...")
-    driver.get(DASHBOARD_URL)
-
-    # Tunggu sampai elemen dashboard muncul agar tidak kosong
-    print("Menunggu elemen data muncul...")
-    wait.until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "#uptHariIni"))
-    )
     time.sleep(3)
 
+    print("2. Mencari kotak input username & password...")
+    user_input = driver.find_element(By.ID, "login_user")
+    pass_input = driver.find_element(By.ID, "login_pass")
+
+    print("3. Mengisi kredensial dan menekan Enter...")
+    user_input.send_keys(USERNAME)
+    pass_input.send_keys(PASSWORD)
+    pass_input.send_keys(Keys.RETURN)  # Menekan tombol Enter untuk login
+
+    print("4. Menunggu proses login selesai...")
+    time.sleep(6)
+
+    print("5. Berpindah ke halaman dashboard...")
+    driver.get(DASHBOARD_URL)
+    time.sleep(5)
+
+    print("6. Mengambil data halaman...")
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     def get_text_safe(selector):
       try:
         el = soup.select_one(selector)
         return el.text.strip() if el else "0"
-      except Exception as err:
-        print(f"Selector {selector} error: {err}")
+      except Exception:
         return "0"
 
     new_data = {
@@ -82,11 +68,11 @@ def scrape_data():
         "pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
     }
 
-    print("Data berhasil ditarik:", new_data)
+    print("SUKSES! Data ditarik:", new_data)
     return new_data
 
   except Exception as e:
-    print(f"TERJADI ERROR DETAIL SAAT SCRAPING: {str(e)}")
+    print(f"GAGAL PADA STEP: {str(e)}")
     return None
   finally:
     driver.quit()
@@ -95,7 +81,7 @@ def scrape_data():
 def main():
   current_data = scrape_data()
   if not current_data:
-    print("Gagal total mendapatkan data.")
+    print("Data kosong, file data.json diabaikan.")
     return
 
   old_history = {"current": {}, "logs": []}
@@ -143,7 +129,7 @@ def main():
 
   with open(DATA_FILE, "w") as f:
     json.dump(final_data, f, indent=4)
-  print("File data.json berhasil diperbarui dengan data baru!")
+  print("File data.json berhasil diperbarui!")
 
 
 if __name__ == "__main__":
