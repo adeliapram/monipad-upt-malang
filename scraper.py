@@ -35,23 +35,16 @@ def scrape_data():
     driver.get(LOGIN_URL)
     time.sleep(3)
 
-    print("2. Mencari kotak input username & password...")
-    user_input = driver.find_element(By.ID, "login_user")
-    pass_input = driver.find_element(By.ID, "login_pass")
-
-    print("3. Mengisi kredensial dan menekan Enter...")
-    user_input.send_keys(USERNAME)
-    pass_input.send_keys(PASSWORD)
-    pass_input.send_keys(Keys.RETURN)  # Menekan tombol Enter untuk login
-
-    print("4. Menunggu proses login selesai...")
+    print("2. Mengisi form login...")
+    driver.find_element(By.ID, "login_user").send_keys(USERNAME)
+    driver.find_element(By.ID, "login_pass").send_keys(PASSWORD)
+    driver.find_element(By.ID, "login_pass").send_keys(Keys.RETURN)
     time.sleep(6)
 
-    print("5. Berpindah ke halaman dashboard...")
+    print("3. Membuka halaman dashboard...")
     driver.get(DASHBOARD_URL)
     time.sleep(5)
 
-    print("6. Mengambil data halaman...")
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     def get_text_safe(selector):
@@ -61,18 +54,30 @@ def scrape_data():
       except Exception:
         return "0"
 
+    # MENARIK SEMUA DATA SEKALIGUS DARI HALAMAN MONIPAD (Badan & UPT)
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "upt_hari_ini": get_text_safe("#uptHariIni div:nth-of-type(2)"),
-        "upt_sd_hari_ini": get_text_safe("#uptSdHariIni div:nth-of-type(2)"),
-        "pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
+        # Menu Monipad UPT
+        "upt_hari_ini": get_text_safe("#uptHariIni div[class*='inner']"),
+        "upt_sd_hari_ini": get_text_safe("#uptSdHariIni div[class*='inner']"),
+        "upt_hit_target": get_text_safe("#hitTarget div div:nth-of-type(2)"),
+        "upt_pen_target": get_text_safe("#penTarget div div:nth-of-type(2)"),
+        "upt_pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
+        "upt_pen_jenis": get_text_safe("#penJenis div div:nth-of-type(2)"),
+        "upt_pen_periode": get_text_safe(
+            "#penTanggalPeriode div div:nth-of-type(2)"
+        ),
+        # Menu Monipad Badan (Tambahkan selector jika diperlukan)
+        "badan_pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
+        "badan_pen_jenis": get_text_safe("#penJenis div div:nth-of-type(2)"),
+        "badan_pen_target": get_text_safe("#penTarget div"),
     }
 
-    print("SUKSES! Data ditarik:", new_data)
+    print("SUKSES! Semua data berhasil ditarik:", new_data)
     return new_data
 
   except Exception as e:
-    print(f"GAGAL PADA STEP: {str(e)}")
+    print(f"GAGAL SAAT SCRAPING: {str(e)}")
     return None
   finally:
     driver.quit()
@@ -81,7 +86,6 @@ def scrape_data():
 def main():
   current_data = scrape_data()
   if not current_data:
-    print("Data kosong, file data.json diabaikan.")
     return
 
   old_history = {"current": {}, "logs": []}
@@ -95,10 +99,11 @@ def main():
   old_vals = old_history.get("current", {})
   logs = old_history.get("logs", [])
 
-  if "pen_total" in old_vals and "pen_total" in current_data:
+  # Deteksi perubahan untuk log notifikasi (contoh pada upt_pen_total)
+  if "upt_pen_total" in old_vals and "upt_pen_total" in current_data:
     try:
       clean_old = float(
-          old_vals["pen_total"]
+          old_vals["upt_pen_total"]
           .replace("Rp", "")
           .replace(".", "")
           .replace(",", ".")
@@ -106,7 +111,7 @@ def main():
           or 0
       )
       clean_new = float(
-          current_data["pen_total"]
+          current_data["upt_pen_total"]
           .replace("Rp", "")
           .replace(".", "")
           .replace(",", ".")
@@ -117,9 +122,9 @@ def main():
       diff = clean_new - clean_old
       if diff != 0:
         pesan = (
-            f"Pendapatan Total bertambah Rp {diff:,.0f}"
+            f"Pendapatan UPT bertambah Rp {diff:,.0f}"
             if diff > 0
-            else f"Pendapatan Total berkurang Rp {abs(diff):,.0f}"
+            else f"Pendapatan UPT berkurang Rp {abs(diff):,.0f}"
         )
         logs.insert(0, {"time": current_data["timestamp"], "message": pesan})
     except Exception:
