@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+
+[build.processing]
+  skip_processing = false
+
+# Mengabaikan build jika yang berubah hanya file data.json
+[build.ignore]
+  command = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF data.json"
