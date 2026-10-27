@@ -1,1 +1,36 @@
+name: Monipad Auto Scraper
 
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Berjalan setiap 30 menit
+  workflow_dispatch: # Bisa dijalankan manual lewat tombol di GitHub
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install selenium beautifulsoup4 webdriver-manager requests
+
+      - name: Run Scraper Script
+        env:
+          MONIPAD_USER: ${{ secrets.MONIPAD_USER }}
+          MONIPAD_PASS: ${{ secrets.MONIPAD_PASS }}
+        run: |
+          python scraper.py
+
+      - name: Commit and Push Changes if Data Updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update Monipad Data [skip ci]" && git push)
