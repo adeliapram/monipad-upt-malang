@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/login"
@@ -32,24 +34,47 @@ def scrape_data():
   try:
     print("Membuka halaman login...")
     driver.get(LOGIN_URL)
-    time.sleep(3)
 
-    # Menggunakan ID sesuai elemen asli yang Anda berikan
+    # Tunggu maksimal 10 detik sampai elemen input 'login_user' benar-benar muncul di layar
+    print("Menunggu elemen form login siap...")
+    wait = WebDriverWait(driver, 10)
+    username_field = wait.until(
+        EC.presence_of_element_located((By.ID, "login_user"))
+    )
+    password_field = driver.find_element(By.ID, "login_pass")
+
     print("Mengisi form login...")
-    driver.find_element(By.ID, "login_user").send_keys(USERNAME)
-    driver.find_element(By.ID, "login_pass").send_keys(PASSWORD)
+    username_field.send_keys(USERNAME)
+    password_field.send_keys(PASSWORD)
 
-    # Cari tombol submit / login (biasanya tombol bertipe submit atau di dalam form)
-    # Jika tombolnya berupa <button type="submit"> atau <input type="submit">
-    submit_btn = driver.find_element(
-        By.TAG_NAME, "button"
-    )  # atau bisa menggunakan By.XPATH, '//button[@type="submit"]'
-    submit_btn.click()
+    # Cari dan klik tombol login
+    print("Mengklik tombol login...")
+    try:
+      submit_btn = wait.until(
+          EC.element_to_be_clickable(
+              (
+                  By.XPATH,
+                  '//button[@type="submit"] | //input[@type="submit"] |'
+                  ' //button',
+              )
+          )
+      )
+      submit_btn.click()
+    except Exception:
+      # Fallback klik via javascript jika tombol tertutup elemen lain
+      submit_btn = driver.find_element(By.TAG_NAME, "button")
+      driver.execute_script("arguments[0].click();", submit_btn)
+
+    print("Menunggu proses login & masuk ke dashboard...")
     time.sleep(5)
 
+    # Masuk ke halaman dashboard
+    driver.get(DASHBOARD_URL)
+    time.sleep(5)
+
+    print("URL saat ini:", driver.current_url)
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
-    # Fungsi aman mengambil teks berdasarkan selector elemen XPath/ID Anda
     def get_text_safe(selector):
       try:
         el = soup.select_one(selector)
@@ -57,7 +82,7 @@ def scrape_data():
       except Exception:
         return "0"
 
-    # Mengambil data sesuai elemen yang Anda berikan di awal
+    # Mengambil data sesuai elemen XPath / ID yang Anda berikan
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "upt_hari_ini": get_text_safe("#uptHariIni div:nth-of-type(2)"),
@@ -65,7 +90,7 @@ def scrape_data():
         "pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
     }
 
-    print("Data berhasil diambil:", new_data)
+    print("Data yang berhasil diekstrak:", new_data)
     return new_data
 
   except Exception as e:
@@ -77,9 +102,8 @@ def scrape_data():
 
 def main():
   current_data = scrape_data()
-  if not current_data:
-    print("Gagal mendapatkan data, file data.json tidak diubah.")
-    return
+  if not current_data or current_data.get("upt_hari_ini") == "0":
+    print("Peringatan: Data kosong atau gagal ditarik.")
 
   # Load data lama jika ada
   old_history = {"current": {}, "logs": []}
@@ -124,12 +148,12 @@ def main():
     except Exception:
       pass
 
-  # Simpan hasil akhir ke data.json
+  # Simpan ke data.json
   final_data = {"current": current_data, "logs": logs[:50]}
 
   with open(DATA_FILE, "w") as f:
     json.dump(final_data, f, indent=4)
-  print("File data.json berhasil diperbarui!")
+  print("File data.json berhasil disimpan!")
 
 
 if __name__ == "__main__":
