@@ -54,11 +54,9 @@ def scrape_data():
     print("5. Membuka halaman dashboard...")
     driver.get(DASHBOARD_URL)
     
-    # Menunggu sampai elemen utama benar-benar termuat dan berisi data (tidak kosong)
-    print("Menunggu data dashboard selesai dirender oleh browser...")
-    wait = WebDriverWait(driver, 20)
-    wait.until(lambda d: d.find_element(By.ID, "pro_sdhari_ini").text.strip() != "")
-    time.sleep(2) # Jeda tambahan agar semua card lain ikut stabil
+    # Berikan waktu tunggu stabil 8 detik agar data AJAX selesai dimuat oleh browser
+    print("Menunggu data dashboard dimuat...")
+    time.sleep(8)
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
