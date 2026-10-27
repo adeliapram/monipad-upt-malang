@@ -35,9 +35,8 @@ def scrape_data():
     print("Membuka halaman login...")
     driver.get(LOGIN_URL)
 
-    # Tunggu maksimal 10 detik sampai elemen input 'login_user' benar-benar muncul di layar
-    print("Menunggu elemen form login siap...")
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 15)
+    print("Menunggu form login...")
     username_field = wait.until(
         EC.presence_of_element_located((By.ID, "login_user"))
     )
@@ -47,42 +46,35 @@ def scrape_data():
     username_field.send_keys(USERNAME)
     password_field.send_keys(PASSWORD)
 
-    # Cari dan klik tombol login
     print("Mengklik tombol login...")
-    try:
-      submit_btn = wait.until(
-          EC.element_to_be_clickable(
-              (
-                  By.XPATH,
-                  '//button[@type="submit"] | //input[@type="submit"] |'
-                  ' //button',
-              )
-          )
-      )
-      submit_btn.click()
-    except Exception:
-      # Fallback klik via javascript jika tombol tertutup elemen lain
-      submit_btn = driver.find_element(By.TAG_NAME, "button")
-      driver.execute_script("arguments[0].click();", submit_btn)
+    submit_btn = driver.find_element(
+        By.XPATH, '//button[@type="submit"] | //input[@type="submit"] | //button'
+    )
+    submit_btn.click()
 
-    print("Menunggu proses login & masuk ke dashboard...")
-    time.sleep(5)
+    print("Menunggu halaman dashboard termuat...")
+    time.sleep(7)  # Jeda aman untuk proses login selesai
 
-    # Masuk ke halaman dashboard
+    print("Membuka URL dashboard...")
     driver.get(DASHBOARD_URL)
-    time.sleep(5)
 
-    print("URL saat ini:", driver.current_url)
+    # Tunggu sampai elemen dashboard muncul agar tidak kosong
+    print("Menunggu elemen data muncul...")
+    wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "#uptHariIni"))
+    )
+    time.sleep(3)
+
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     def get_text_safe(selector):
       try:
         el = soup.select_one(selector)
         return el.text.strip() if el else "0"
-      except Exception:
+      except Exception as err:
+        print(f"Selector {selector} error: {err}")
         return "0"
 
-    # Mengambil data sesuai elemen XPath / ID yang Anda berikan
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "upt_hari_ini": get_text_safe("#uptHariIni div:nth-of-type(2)"),
@@ -90,11 +82,11 @@ def scrape_data():
         "pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
     }
 
-    print("Data yang berhasil diekstrak:", new_data)
+    print("Data berhasil ditarik:", new_data)
     return new_data
 
   except Exception as e:
-    print(f"Terjadi error saat scraping: {e}")
+    print(f"TERJADI ERROR DETAIL SAAT SCRAPING: {str(e)}")
     return None
   finally:
     driver.quit()
@@ -102,10 +94,10 @@ def scrape_data():
 
 def main():
   current_data = scrape_data()
-  if not current_data or current_data.get("upt_hari_ini") == "0":
-    print("Peringatan: Data kosong atau gagal ditarik.")
+  if not current_data:
+    print("Gagal total mendapatkan data.")
+    return
 
-  # Load data lama jika ada
   old_history = {"current": {}, "logs": []}
   if os.path.exists(DATA_FILE):
     try:
@@ -117,7 +109,6 @@ def main():
   old_vals = old_history.get("current", {})
   logs = old_history.get("logs", [])
 
-  # Cek perubahan untuk log notifikasi
   if "pen_total" in old_vals and "pen_total" in current_data:
     try:
       clean_old = float(
@@ -148,12 +139,11 @@ def main():
     except Exception:
       pass
 
-  # Simpan ke data.json
   final_data = {"current": current_data, "logs": logs[:50]}
 
   with open(DATA_FILE, "w") as f:
     json.dump(final_data, f, indent=4)
-  print("File data.json berhasil disimpan!")
+  print("File data.json berhasil diperbarui dengan data baru!")
 
 
 if __name__ == "__main__":
