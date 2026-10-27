@@ -12,7 +12,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-# URL Login utama sesuai yang Anda berikan
 LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/"
 DASHBOARD_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/"
 
@@ -37,7 +36,6 @@ def scrape_data():
     print("1. Membuka halaman utama login...")
     driver.get(LOGIN_URL)
 
-    # Menunggu elemen form muncul menggunakan XPath persis yang Anda berikan
     print("2. Menunggu form login muncul...")
     wait = WebDriverWait(driver, 15)
     user_input = wait.until(
@@ -66,7 +64,6 @@ def scrape_data():
       except Exception:
         return "0"
 
-    # Menarik semua data mentah sekaligus
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "upt_hari_ini": get_text_safe("#uptHariIni div[class*='inner']"),
@@ -93,23 +90,35 @@ def scrape_data():
 def main():
   current_data = scrape_data()
   if not current_data:
+    print("Gagal mengambil data dari web.")
     return
 
+  # Load data lama dengan pengamanan ekstra agar tidak NoneType error
   old_history = {"current": {}, "logs": []}
   if os.path.exists(DATA_FILE):
     try:
       with open(DATA_FILE, "r") as f:
-        old_history = json.load(f)
+        content = f.read()
+        if content.strip():
+          old_history = json.loads(content)
+          if not isinstance(old_history, dict):
+            old_history = {"current": {}, "logs": []}
     except Exception:
-      pass
+      old_history = {"current": {}, "logs": []}
 
-  old_vals = old_history.get("current", {})
-  logs = old_history.get("logs", [])
+  old_vals = old_history.get("current")
+  if not isinstance(old_vals, dict):
+    old_vals = {}
 
+  logs = old_history.get("logs")
+  if not isinstance(logs, list):
+    logs = []
+
+  # Deteksi perubahan untuk log notifikasi
   if "upt_pen_total" in old_vals and "upt_pen_total" in current_data:
     try:
       clean_old = float(
-          old_vals["upt_pen_total"]
+          str(old_vals["upt_pen_total"])
           .replace("Rp", "")
           .replace(".", "")
           .replace(",", ".")
@@ -117,7 +126,7 @@ def main():
           or 0
       )
       clean_new = float(
-          current_data["upt_pen_total"]
+          str(current_data["upt_pen_total"])
           .replace("Rp", "")
           .replace(".", "")
           .replace(",", ".")
@@ -140,7 +149,7 @@ def main():
 
   with open(DATA_FILE, "w") as f:
     json.dump(final_data, f, indent=4)
-  print("File data.json berhasil diperbarui!")
+  print("File data.json berhasil diperbarui dengan aman!")
 
 
 if __name__ == "__main__":
