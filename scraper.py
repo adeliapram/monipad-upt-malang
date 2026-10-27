@@ -53,21 +53,25 @@ def scrape_data():
 
     print("5. Membuka halaman dashboard...")
     driver.get(DASHBOARD_URL)
-    time.sleep(5)
+    
+    # Menunggu sampai elemen utama benar-benar termuat dan berisi data (tidak kosong)
+    print("Menunggu data dashboard selesai dirender oleh browser...")
+    wait = WebDriverWait(driver, 20)
+    wait.until(lambda d: d.find_element(By.ID, "pro_sdhari_ini").text.strip() != "")
+    time.sleep(2) # Jeda tambahan agar semua card lain ikut stabil
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     def get_text_safe(selector):
-      try:
-        el = soup.select_one(selector)
-        return el.get_text(strip=True) if el else "0"
-      except Exception:
-        return "0"
+        try:
+            el = soup.select_one(selector)
+            return el.get_text(strip=True) if el else "0"
+        except Exception:
+            return "0"
 
-    # Menarik data persis berdasarkan ID dari struktur HTML Monipad
+    # Menarik data secara akurat sesuai ID elemen HTML Monipad
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        # Kartu 1: Total S/D Hari Ini
         "pro_sdhari_ini": get_text_safe("#pro_sdhari_ini"),
         "jml_target": get_text_safe("#jml_target"),
         "jml_sdhari_ini": get_text_safe("#jml_sdhari_ini"),
@@ -76,7 +80,6 @@ def scrape_data():
         "jml_target_non": get_text_safe("#jml_target_non"),
         "jml_sdhari_ini_non": get_text_safe("#jml_sdhari_ini_non"),
         "jml_hari_kerja": get_text_safe("#jml_hari_kerja"),
-        # Kartu 2: Per Jenis Penerimaan S/D Hari Ini (Persentase & Nominal)
         "pro_pkb": get_text_safe("#pro_pkb"),
         "prg_pkb": get_text_safe("#prg_pkb"),
         "pro_bbn": get_text_safe("#pro_bbn"),
@@ -97,7 +100,6 @@ def scrape_data():
 
     print("SUKSES! Data berhasil ditarik:", new_data)
     return new_data
-
   except Exception as e:
     print(f"GAGAL SAAT SCRAPING: {str(e)}")
     return None
