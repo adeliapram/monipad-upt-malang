@@ -9,10 +9,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/"
+LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/login"
 DASHBOARD_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/"
 
-# Mengambil kredensial dari GitHub Secrets (Aman!)
 USERNAME = os.environ.get("MONIPAD_USER")
 PASSWORD = os.environ.get("MONIPAD_PASS")
 
@@ -31,35 +30,47 @@ def scrape_data():
   )
 
   try:
+    print("Membuka halaman login...")
     driver.get(LOGIN_URL)
     time.sleep(3)
 
-    # Sesuaikan name input form login MONIPAD Anda
+    # Masukkan kredensial login
+    print("Mengisi form login...")
     driver.find_element(By.NAME, "username").send_keys(USERNAME)
     driver.find_element(By.NAME, "password").send_keys(PASSWORD)
-    driver.find_element(By.TAG_NAME, "button").click()
-    time.sleep(4)
 
+    # Cari tombol submit/login (sesuaikan jika menggunakan tag lain)
+    submit_btn = driver.find_element(By.TAG_NAME, "button")
+    submit_btn.click()
+    time.sleep(5)
+
+    print("Masuk ke dashboard...")
     driver.get(DASHBOARD_URL)
-    time.sleep(4)
+    time.sleep(5)  # Beri waktu halaman render sempurna
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
+    # Fungsi aman mengambil teks berdasarkan selector elemen XPath/ID Anda
     def get_text_safe(selector):
-      el = soup.select_one(selector)
-      return el.text.strip() if el else "0"
+      try:
+        el = soup.select_one(selector)
+        return el.text.strip() if el else "0"
+      except Exception:
+        return "0"
 
-    # Ekstraksi berdasarkan elemen XPath / ID yang Anda berikan
+    # Mengambil data sesuai elemen yang Anda berikan di awal
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "upt_hari_ini": get_text_safe("#uptHariIni div:nth-of-type(2)"),
         "upt_sd_hari_ini": get_text_safe("#uptSdHariIni div:nth-of-type(2)"),
         "pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
-        "pen_jenis": get_text_safe("#penJenis div div:nth-of-type(2)"),
     }
+
+    print("Data berhasil diambil:", new_data)
     return new_data
+
   except Exception as e:
-    print(f"Error scraping: {e}")
+    print(f"Terjadi error saat scraping: {e}")
     return None
   finally:
     driver.quit()
@@ -68,18 +79,22 @@ def scrape_data():
 def main():
   current_data = scrape_data()
   if not current_data:
+    print("Gagal mendapatkan data, file data.json tidak diubah.")
     return
 
-  # Load data lama untuk perbandingan (Diff) & Log
+  # Load data lama jika ada
   old_history = {"current": {}, "logs": []}
   if os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "r") as f:
-      old_history = json.load(f)
+    try:
+      with open(DATA_FILE, "r") as f:
+        old_history = json.load(f)
+    except Exception:
+      pass
 
   old_vals = old_history.get("current", {})
   logs = old_history.get("logs", [])
 
-  # Deteksi Perubahan (Contoh untuk pen_total)
+  # Cek perubahan untuk log notifikasi
   if "pen_total" in old_vals and "pen_total" in current_data:
     try:
       clean_old = float(
@@ -110,11 +125,12 @@ def main():
     except Exception:
       pass
 
-  # Simpan struktur data baru
-  final_data = {"current": current_data, "logs": logs[:50]}  # Simpan 50 log terbaru
+  # Simpan hasil akhir ke data.json
+  final_data = {"current": current_data, "logs": logs[:50]}
 
   with open(DATA_FILE, "w") as f:
     json.dump(final_data, f, indent=4)
+  print("File data.json berhasil diperbarui!")
 
 
 if __name__ == "__main__":
