@@ -1,31 +1,102 @@
-async function loadDashboardData() {
-    try {
-        const response = await fetch('data.json?t=' + new Date().getTime());
-        const data = await response.json();
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Kinerja UPT - Monitoring Monipad</title>
+    <!-- Menggunakan Tailwind CSS agar langsung rapi dan profesional -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
 
-        // HANYA PILIH DATA YANG INGIN DITAMPILKAN DI WEB ANDA:
-        document.getElementById('val-hari-ini').innerText = data.current.upt_hari_ini || '0';
-        document.getElementById('val-sd-hari-ini').innerText = data.current.upt_sd_hari_ini || '0';
-        document.getElementById('val-pen-total').innerText = data.current.upt_pen_total || '0';
+    <!-- Header / Navbar -->
+    <header class="bg-emerald-700 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">Dashboard Kinerja UPT</h1>
+                <p class="text-xs text-emerald-100">Monitoring Otomatis Data MONIPAD Bapenda Jatim</p>
+            </div>
+            <div id="last-update" class="text-xs bg-emerald-800/60 px-3 py-1.5 rounded-full font-mono">
+                Memuat pembaruan...
+            </div>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
         
-        // Data lain seperti upt_hit_target atau badan_pen_target 
-        // sengaja tidak dipanggil, jadi aman tersimpan di background tanpa tampil di web.
+        <!-- Kartu Metrik Utama -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Kartu 1 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Penerimaan Hari Ini</p>
+                <h2 id="val-hari-ini" class="text-2xl font-bold text-slate-700">-</h2>
+            </div>
+            <!-- Kartu 2 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Penerimaan S/D Hari Ini</p>
+                <h2 id="val-sd-hari-ini" class="text-2xl font-bold text-slate-700">-</h2>
+            </div>
+            <!-- Kartu 3 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Pendapatan</p>
+                <h2 id="val-pen-total" class="text-2xl font-bold text-emerald-600">-</h2>
+            </div>
+        </div>
 
-        document.getElementById('last-update').innerText = 'Pembaruan Terakhir: ' + data.current.timestamp;
+        <!-- Riwayat Log Perubahan -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span>🔔</span> Riwayat Notifikasi Perubahan
+            </h3>
+            <div id="log-container" class="space-y-3">
+                <p class="text-sm text-slate-400">Memuat riwayat perubahan...</p>
+            </div>
+        </section>
 
-        // Memuat Log Notifikasi Perubahan
-        const logContainer = document.getElementById('log-container');
-        if (data.logs && data.logs.length > 0) {
-            logContainer.innerHTML = data.logs.map(log => `
-                <div class="flex items-start justify-between p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-sm">
-                    <span class="font-medium text-slate-700">🔔 ${log.message}</span>
-                    <span class="text-xs text-slate-400 font-mono ml-4">${log.time}</span>
-                </div>
-            `).join('');
-        } else {
-            logContainer.innerHTML = '<p class="text-sm text-slate-400">Belum ada perubahan tercatat.</p>';
+    </main>
+
+    <!-- Skrip JavaScript untuk Menarik data.json secara Real-Time -->
+    <script>
+        async function loadDashboardData() {
+            try {
+                // Menambahkan parameter waktu agar browser tidak menyimpan cache lama
+                const response = await fetch('data.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error("File data.json belum tersedia.");
+                
+                const data = await response.json();
+                const current = data.current || {};
+
+                // Memasukkan data ke elemen HTML sesuai ID-nya
+                document.getElementById('val-hari-ini').innerText = current.upt_hari_ini || '0';
+                document.getElementById('val-sd-hari-ini').innerText = current.upt_sd_hari_ini || '0';
+                document.getElementById('val-pen-total').innerText = current.upt_pen_total || '0';
+                
+                document.getElementById('last-update').innerText = 'Pembaruan Terakhir: ' + (current.timestamp || '-');
+
+                // Menampilkan Log Notifikasi
+                const logContainer = document.getElementById('log-container');
+                if (data.logs && data.logs.length > 0) {
+                    logContainer.innerHTML = data.logs.map(log => `
+                        <div class="flex items-start justify-between p-3 bg-emerald-50/50 rounded-lg border border-emerald-100 text-sm">
+                            <span class="font-medium text-slate-700">🔔 ${log.message}</span>
+                            <span class="text-xs text-slate-400 font-mono ml-4">${log.time}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    logContainer.innerHTML = '<p class="text-sm text-slate-400">Belum ada perubahan tercatat.</p>';
+                }
+            } catch (error) {
+                console.error('Gagal memuat data:', error);
+                document.getElementById('last-update').innerText = 'Menunggu data scraper...';
+            }
         }
-    } catch (error) {
-        console.error('Gagal memuat data:', error);
-    }
-}
+
+        // Jalankan saat pertama kali dibuka
+        loadDashboardData();
+
+        // Auto-refresh data setiap 30 detik agar selalu sinkron
+        setInterval(loadDashboardData, 30000);
+    </script>
+</body>
+</html>
