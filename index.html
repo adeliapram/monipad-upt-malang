@@ -1,80 +1,31 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinerja UPT - Monipad Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-50 text-slate-800 font-sans">
-    <div class="max-w-6xl mx-auto p-6">
-        <header class="mb-8 border-b pb-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-blue-900">Dashboard Kinerja UPT</h1>
-                <p class="text-sm text-slate-500">Monitoring Otomatis Data MONIPAD Bapenda Jatim</p>
-            </div>
-            <div id="last-update" class="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full font-medium">
-                Memuat pembaruan...
-            </div>
-        </header>
+async function loadDashboardData() {
+    try {
+        const response = await fetch('data.json?t=' + new Date().getTime());
+        const data = await response.json();
 
-        <!-- Grid Kartu Data -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-sm font-semibold text-slate-500 mb-2">Penerimaan Hari Ini</h3>
-                <p id="val-hari-ini" class="text-3xl font-bold text-blue-600">-</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-sm font-semibold text-slate-500 mb-2">Penerimaan S/D Hari Ini</h3>
-                <p id="val-sd-hari-ini" class="text-3xl font-bold text-slate-700">-</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-sm font-semibold text-slate-500 mb-2">Total Pendapatan</h3>
-                <p id="val-pen-total" class="text-3xl font-bold text-emerald-600">-</p>
-            </div>
-        </div>
+        // HANYA PILIH DATA YANG INGIN DITAMPILKAN DI WEB ANDA:
+        document.getElementById('val-hari-ini').innerText = data.current.upt_hari_ini || '0';
+        document.getElementById('val-sd-hari-ini').innerText = data.current.upt_sd_hari_ini || '0';
+        document.getElementById('val-pen-total').innerText = data.current.upt_pen_total || '0';
+        
+        // Data lain seperti upt_hit_target atau badan_pen_target 
+        // sengaja tidak dipanggil, jadi aman tersimpan di background tanpa tampil di web.
 
-        <!-- Log Notifikasi Perubahan -->
-        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 class="text-lg font-bold text-slate-800 mb-4">Riwayat Notifikasi Perubahan</h2>
-            <div id="log-container" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                <p class="text-sm text-slate-400">Memuat riwayat perubahan...</p>
-            </div>
-        </section>
-    </div>
+        document.getElementById('last-update').innerText = 'Pembaruan Terakhir: ' + data.current.timestamp;
 
-    <script>
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('data.json?t=' + new Date().getTime());
-                const data = await response.json();
-
-                // Isi Kartu
-                document.getElementById('val-hari-ini').innerText = data.current.upt_hari_ini || '0';
-                document.getElementById('val-sd-hari-ini').innerText = data.current.upt_sd_hari_ini || '0';
-                document.getElementById('val-pen-total').innerText = data.current.pen_total || '0';
-                document.getElementById('last-update').innerText = 'Pembaruan Terakhir: ' + data.current.timestamp;
-
-                // Isi Log Notifikasi
-                const logContainer = document.getElementById('log-container');
-                if (data.logs && data.logs.length > 0) {
-                    logContainer.innerHTML = data.logs.map(log => `
-                        <div class="flex items-start justify-between p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-sm">
-                            <span class="font-medium text-slate-700">🔔 ${log.message}</span>
-                            <span class="text-xs text-slate-400 font-mono ml-4">${log.time}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    logContainer.innerHTML = '<p class="text-sm text-slate-400">Belum ada perubahan tercatat.</p>';
-                }
-            } catch (error) {
-                console.error('Gagal memuat data:', error);
-            }
+        // Memuat Log Notifikasi Perubahan
+        const logContainer = document.getElementById('log-container');
+        if (data.logs && data.logs.length > 0) {
+            logContainer.innerHTML = data.logs.map(log => `
+                <div class="flex items-start justify-between p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-sm">
+                    <span class="font-medium text-slate-700">🔔 ${log.message}</span>
+                    <span class="text-xs text-slate-400 font-mono ml-4">${log.time}</span>
+                </div>
+            `).join('');
+        } else {
+            logContainer.innerHTML = '<p class="text-sm text-slate-400">Belum ada perubahan tercatat.</p>';
         }
-
-        loadDashboardData();
-        // Refresh otomatis data di halaman tiap 5 menit
-        setInterval(loadDashboardData, 300000);
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error('Gagal memuat data:', error);
+    }
+}
