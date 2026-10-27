@@ -34,19 +34,18 @@ def scrape_data():
     driver.get(LOGIN_URL)
     time.sleep(3)
 
-    # Masukkan kredensial login
+    # Menggunakan ID sesuai elemen asli yang Anda berikan
     print("Mengisi form login...")
-    driver.find_element(By.NAME, "username").send_keys(USERNAME)
-    driver.find_element(By.NAME, "password").send_keys(PASSWORD)
+    driver.find_element(By.ID, "login_user").send_keys(USERNAME)
+    driver.find_element(By.ID, "login_pass").send_keys(PASSWORD)
 
-    # Cari tombol submit/login (sesuaikan jika menggunakan tag lain)
-    submit_btn = driver.find_element(By.TAG_NAME, "button")
+    # Cari tombol submit / login (biasanya tombol bertipe submit atau di dalam form)
+    # Jika tombolnya berupa <button type="submit"> atau <input type="submit">
+    submit_btn = driver.find_element(
+        By.TAG_NAME, "button"
+    )  # atau bisa menggunakan By.XPATH, '//button[@type="submit"]'
     submit_btn.click()
     time.sleep(5)
-
-    print("Masuk ke dashboard...")
-    driver.get(DASHBOARD_URL)
-    time.sleep(5)  # Beri waktu halaman render sempurna
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
