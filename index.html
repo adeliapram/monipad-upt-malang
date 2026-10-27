@@ -13,7 +13,7 @@
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold tracking-wide">Dashboard Kinerja UPT Malang</h1>
-                <p class="text-xs text-emerald-100">Monitoring Otomatis Data Lengkap MONIPAD Bapenda Jatim</p>
+                <p class="text-xs text-emerald-100">Monitoring Otomatis Data MONIPAD Bapenda Jatim</p>
             </div>
             <div id="last-update" class="text-xs bg-emerald-800/60 px-3 py-1.5 rounded-full font-mono">
                 Memuat pembaruan...
@@ -21,57 +21,50 @@
         </div>
     </header>
 
-    <!-- Konten Utama: Menampilkan Semua Data -->
+    <!-- Konten Utama -->
     <main class="max-w-7xl mx-auto px-6 py-8">
         
-        <!-- Grid Kartu Semua Data MONIPAD -->
+        <!-- Grid Kartu Data Utama -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             
-            <!-- UPT Hari Ini -->
+            <!-- Total S/D Hari Ini -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">UPT Hari Ini</p>
-                <h2 id="val-upt-hari-ini" class="text-xl font-bold text-slate-700">-</h2>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pencapaian S/D Hari Ini</p>
+                <h2 id="val-pro" class="text-3xl font-bold text-emerald-600 mb-4">-</h2>
+                <div class="space-y-2 text-sm text-slate-600">
+                    <p class="flex justify-between"><span>Target:</span> <strong id="val-target">-</strong></p>
+                    <p class="flex justify-between"><span>Realisasi:</span> <strong id="val-sdhari">-</strong></p>
+                    <p class="flex justify-between"><span>Hari Ini:</span> <strong id="val-hariini">-</strong></p>
+                    <p class="flex justify-between"><span>Kurang:</span> <strong id="val-kurang">-</strong></p>
+                </div>
             </div>
 
-            <!-- UPT S/d Hari Ini -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">UPT S/d Hari Ini</p>
-                <h2 id="val-upt-sd-hari-ini" class="text-xl font-bold text-slate-700">-</h2>
-            </div>
-
-            <!-- Hit Target -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Hit Target</p>
-                <h2 id="val-upt-hit-target" class="text-xl font-bold text-slate-700">-</h2>
-            </div>
-
-            <!-- Penerimaan Target -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Penerimaan Target</p>
-                <h2 id="val-upt-pen-target" class="text-xl font-bold text-slate-700">-</h2>
-            </div>
-
-            <!-- Total Pendapatan -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Pendapatan (Pen Total)</p>
-                <h2 id="val-upt-pen-total" class="text-2xl font-bold text-emerald-600">-</h2>
-            </div>
-
-            <!-- Penerimaan per Jenis -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Penerimaan per Jenis</p>
-                <h2 id="val-upt-pen-jenis" class="text-xl font-bold text-slate-700">-</h2>
-            </div>
-
-            <!-- Penerimaan Periode -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 lg:col-span-3">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Penerimaan Berdasarkan Periode Tanggal</p>
-                <h2 id="val-upt-pen-periode" class="text-xl font-bold text-slate-700">-</h2>
+            <!-- Per Jenis Penerimaan -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 lg:col-span-2">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Per Jenis Penerimaan S/D Hari Ini</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <div class="flex justify-between font-bold mb-1"><span>PKB</span> <span id="val-pro-pkb">-</span></div>
+                        <div class="text-xs text-slate-500 truncate" id="val-prg-pkb">-</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <div class="flex justify-between font-bold mb-1"><span>BBNKB</span> <span id="val-pro-bbn">-</span></div>
+                        <div class="text-xs text-slate-500 truncate" id="val-prg-bbn">-</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <div class="flex justify-between font-bold mb-1"><span>Pajak Bahan Bakar</span> <span id="val-pro-pbb">-</span></div>
+                        <div class="text-xs text-slate-500 truncate" id="val-prg-pbb">-</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <div class="flex justify-between font-bold mb-1"><span>Pajak Air Permukaan</span> <span id="val-pro-pap">-</span></div>
+                        <div class="text-xs text-slate-500 truncate" id="val-prg-pap">-</div>
+                    </div>
+                </div>
             </div>
 
         </div>
 
-        <!-- Riwayat Log Perubahan di Bawah -->
+        <!-- Riwayat Log Perubahan di Bagian Bawah -->
         <section class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
             <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <span>🔔</span> Riwayat Notifikasi Perubahan
@@ -83,7 +76,7 @@
 
     </main>
 
-    <!-- Skrip JavaScript untuk Menarik data.json -->
+    <!-- Skrip JavaScript -->
     <script>
         async function loadDashboardData() {
             try {
@@ -93,18 +86,25 @@
                 const data = await response.json();
                 const current = data.current || {};
 
-                // Menampilkan semua data ke elemen HTML masing-masing
-                document.getElementById('val-upt-hari-ini').innerText = current.upt_hari_ini || '0';
-                document.getElementById('val-upt-sd-hari-ini').innerText = current.upt_sd_hari_ini || '0';
-                document.getElementById('val-upt-hit-target').innerText = current.upt_hit_target || '0';
-                document.getElementById('val-upt-pen-target').innerText = current.upt_pen_target || '0';
-                document.getElementById('val-upt-pen-total').innerText = current.upt_pen_total || '0';
-                document.getElementById('val-upt-pen-jenis').innerText = current.upt_pen_jenis || '0';
-                document.getElementById('val-upt-pen-periode').innerText = current.upt_pen_periode || '0';
+                // Masukkan data ke elemen HTML
+                document.getElementById('val-pro').innerText = current.pro_sdhari_ini || '0%';
+                document.getElementById('val-target').innerText = current.jml_target || '0';
+                document.getElementById('val-sdhari').innerText = current.jml_sdhari_ini || '0';
+                document.getElementById('val-hariini').innerText = current.jml_hari_ini || '0';
+                document.getElementById('val-kurang').innerText = current.jml_kurang || '0';
+
+                document.getElementById('val-pro-pkb').innerText = current.pro_pkb || '0%';
+                document.getElementById('val-prg-pkb').innerText = current.prg_pkb || '-';
+                document.getElementById('val-pro-bbn').innerText = current.pro_bbn || '0%';
+                document.getElementById('val-prg-bbn').innerText = current.prg_bbn || '-';
+                document.getElementById('val-pro-pbb').innerText = current.pro_pbb || '0%';
+                document.getElementById('val-prg-pbb').innerText = current.prg_pbb || '-';
+                document.getElementById('val-pro-pap').innerText = current.pro_pap || '0%';
+                document.getElementById('val-prg-pap').innerText = current.prg_pap || '-';
                 
                 document.getElementById('last-update').innerText = 'Pembaruan Terakhir: ' + (current.timestamp || '-');
 
-                // Memuat Log Notifikasi Perubahan di Bagian Bawah
+                // Memuat Log Perubahan di Bawah
                 const logContainer = document.getElementById('log-container');
                 if (data.logs && data.logs.length > 0) {
                     logContainer.innerHTML = data.logs.map(log => `
