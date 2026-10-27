@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/login"
@@ -33,15 +35,24 @@ def scrape_data():
   try:
     print("1. Membuka halaman login...")
     driver.get(LOGIN_URL)
-    time.sleep(3)
 
-    print("2. Mengisi form login...")
-    driver.find_element(By.ID, "login_user").send_keys(USERNAME)
-    driver.find_element(By.ID, "login_pass").send_keys(PASSWORD)
-    driver.find_element(By.ID, "login_pass").send_keys(Keys.RETURN)
-    time.sleep(6)
+    # Menunggu maksimal 15 detik sampai elemen 'login_user' benar-benar siap
+    print("2. Menunggu form login muncul...")
+    wait = WebDriverWait(driver, 15)
+    user_input = wait.until(
+        EC.presence_of_element_located((By.ID, "login_user"))
+    )
+    pass_input = driver.find_element(By.ID, "login_pass")
 
-    print("3. Membuka halaman dashboard...")
+    print("3. Mengisi kredensial...")
+    user_input.send_keys(USERNAME)
+    pass_input.send_keys(PASSWORD)
+    pass_input.send_keys(Keys.RETURN)
+
+    print("4. Menunggu proses login selesai...")
+    time.sleep(7)
+
+    print("5. Membuka halaman dashboard...")
     driver.get(DASHBOARD_URL)
     time.sleep(5)
 
@@ -54,10 +65,9 @@ def scrape_data():
       except Exception:
         return "0"
 
-    # MENARIK SEMUA DATA SEKALIGUS DARI HALAMAN MONIPAD (Badan & UPT)
+    # Menarik semua data mentah sekaligus
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        # Menu Monipad UPT
         "upt_hari_ini": get_text_safe("#uptHariIni div[class*='inner']"),
         "upt_sd_hari_ini": get_text_safe("#uptSdHariIni div[class*='inner']"),
         "upt_hit_target": get_text_safe("#hitTarget div div:nth-of-type(2)"),
@@ -67,10 +77,6 @@ def scrape_data():
         "upt_pen_periode": get_text_safe(
             "#penTanggalPeriode div div:nth-of-type(2)"
         ),
-        # Menu Monipad Badan (Tambahkan selector jika diperlukan)
-        "badan_pen_total": get_text_safe("#penTotal div div:nth-of-type(2)"),
-        "badan_pen_jenis": get_text_safe("#penJenis div div:nth-of-type(2)"),
-        "badan_pen_target": get_text_safe("#penTarget div"),
     }
 
     print("SUKSES! Semua data berhasil ditarik:", new_data)
@@ -99,7 +105,6 @@ def main():
   old_vals = old_history.get("current", {})
   logs = old_history.get("logs", [])
 
-  # Deteksi perubahan untuk log notifikasi (contoh pada upt_pen_total)
   if "upt_pen_total" in old_vals and "upt_pen_total" in current_data:
     try:
       clean_old = float(
