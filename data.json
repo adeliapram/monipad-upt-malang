@@ -1,13 +1,30 @@
 {
     "current": {
-        "timestamp": "2026-10-27 08:52:37",
-        "upt_hari_ini": "0",
-        "upt_sd_hari_ini": "0",
-        "upt_hit_target": "0",
-        "upt_pen_target": "0",
-        "upt_pen_total": "0",
-        "upt_pen_jenis": "0",
-        "upt_pen_periode": "0"
+        "timestamp": "2026-10-27 09:00:23",
+        "pro_sdhari_ini": "0",
+        "jml_target": "0",
+        "jml_sdhari_ini": "0",
+        "jml_hari_ini": "0",
+        "jml_kurang": "0",
+        "jml_target_non": "0",
+        "jml_sdhari_ini_non": "0",
+        "jml_hari_kerja": "0",
+        "pro_pkb": "0",
+        "prg_pkb": "0",
+        "pro_bbn": "0",
+        "prg_bbn": "0",
+        "pro_pbb": "0",
+        "prg_pbb": "0",
+        "pro_pap": "0",
+        "prg_pap": "0",
+        "pro_prk": "0",
+        "prg_prk": "0",
+        "pro_rju": "0",
+        "prg_rju": "0",
+        "pro_pll": "0",
+        "prg_pll": "0",
+        "pro_mblb": "0",
+        "prg_mblb": "0"
     },
     "logs": []
 }
