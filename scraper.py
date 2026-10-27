@@ -60,24 +60,42 @@ def scrape_data():
     def get_text_safe(selector):
       try:
         el = soup.select_one(selector)
-        return el.text.strip() if el else "0"
+        return el.get_text(strip=True) if el else "0"
       except Exception:
         return "0"
 
-    # Perbaikan selector agar tepat mengambil angka dari laman MONIPAD
+    # Menarik data persis berdasarkan ID dari struktur HTML Monipad
     new_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        # Mengambil teks di dalam kotak kartu UPT
-        "upt_hari_ini": get_text_safe("#uptHariIni"),
-        "upt_sd_hari_ini": get_text_safe("#uptSdHariIni"),
-        "upt_hit_target": get_text_safe("#hitTarget"),
-        "upt_pen_target": get_text_safe("#penTarget"),
-        "upt_pen_total": get_text_safe("#penTotal"),
-        "upt_pen_jenis": get_text_safe("#penJenis"),
-        "upt_pen_periode": get_text_safe("#penTanggalPeriode"),
+        # Kartu 1: Total S/D Hari Ini
+        "pro_sdhari_ini": get_text_safe("#pro_sdhari_ini"),
+        "jml_target": get_text_safe("#jml_target"),
+        "jml_sdhari_ini": get_text_safe("#jml_sdhari_ini"),
+        "jml_hari_ini": get_text_safe("#jml_hari_ini"),
+        "jml_kurang": get_text_safe("#jml_kurang"),
+        "jml_target_non": get_text_safe("#jml_target_non"),
+        "jml_sdhari_ini_non": get_text_safe("#jml_sdhari_ini_non"),
+        "jml_hari_kerja": get_text_safe("#jml_hari_kerja"),
+        # Kartu 2: Per Jenis Penerimaan S/D Hari Ini (Persentase & Nominal)
+        "pro_pkb": get_text_safe("#pro_pkb"),
+        "prg_pkb": get_text_safe("#prg_pkb"),
+        "pro_bbn": get_text_safe("#pro_bbn"),
+        "prg_bbn": get_text_safe("#prg_bbn"),
+        "pro_pbb": get_text_safe("#pro_pbb"),
+        "prg_pbb": get_text_safe("#prg_pbb"),
+        "pro_pap": get_text_safe("#pro_pap"),
+        "prg_pap": get_text_safe("#prg_pap"),
+        "pro_prk": get_text_safe("#pro_prk"),
+        "prg_prk": get_text_safe("#prg_prk"),
+        "pro_rju": get_text_safe("#pro_rju"),
+        "prg_rju": get_text_safe("#prg_rju"),
+        "pro_pll": get_text_safe("#pro_pll"),
+        "prg_pll": get_text_safe("#prg_pll"),
+        "pro_mblb": get_text_safe("#pro_mblb"),
+        "prg_mblb": get_text_safe("#prg_mblb"),
     }
 
-    print("SUKSES! Semua data berhasil ditarik:", new_data)
+    print("SUKSES! Data berhasil ditarik:", new_data)
     return new_data
 
   except Exception as e:
