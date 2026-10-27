@@ -12,7 +12,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/login"
+# URL Login utama sesuai yang Anda berikan
+LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/"
 DASHBOARD_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/"
 
 USERNAME = os.environ.get("MONIPAD_USER")
@@ -33,16 +34,16 @@ def scrape_data():
   )
 
   try:
-    print("1. Membuka halaman login...")
+    print("1. Membuka halaman utama login...")
     driver.get(LOGIN_URL)
 
-    # Menunggu maksimal 15 detik sampai elemen 'login_user' benar-benar siap
+    # Menunggu elemen form muncul menggunakan XPath persis yang Anda berikan
     print("2. Menunggu form login muncul...")
     wait = WebDriverWait(driver, 15)
     user_input = wait.until(
-        EC.presence_of_element_located((By.ID, "login_user"))
+        EC.presence_of_element_located((By.XPATH, '//*[@id="login_user"]'))
     )
-    pass_input = driver.find_element(By.ID, "login_pass")
+    pass_input = driver.find_element(By.XPATH, '//*[@id="login_pass"]')
 
     print("3. Mengisi kredensial...")
     user_input.send_keys(USERNAME)
