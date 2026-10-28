@@ -47,27 +47,36 @@ def scrape_data():
         print("4. Menunggu proses login selesai...")
         time.sleep(7)
 
-        print("5. Mengambil data langsung dari Endpoint API...")
-        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main/getDataTotal")
-        time.sleep(3)
-        
-        # Mengambil elemen pre atau body untuk memastikan bersih dari tag HTML
-        body_element = driver.find_element(By.TAG_NAME, "body")
-        raw_text = body_element.text.strip()
-        
-        # Jika teks terbungkus tag HTML pre, ambil teks dalamnya
-        try:
-            pre_element = driver.find_element(By.TAG_NAME, "pre")
-            if pre_element:
-                raw_text = pre_element.text.strip()
-        except:
-            pass
+        print("5. Membuka halaman dashboard dan menunggu data dirender...")
+        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
+        time.sleep(5) # Beri waktu browser memuat data AJAX/jQuery
 
-        print(f"DEBUG MENTAH API: {raw_text[:100]}...") # Cek isi data di log GitHub
-        api_json = json.loads(raw_text)
+        # Mengambil data langsung dari elemen HTML yang sudah terisi menggunakan JavaScript browser
+        print("Mengambil data langsung dari elemen halaman...")
+        
+        def get_val(element_id):
+            try:
+                return driver.execute_string if False else driver.find_element(By.ID, element_id).text.strip()
+            except:
+                return "0"
+
+        new_data = {
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "pro_sdhari_ini": get_val("pro_sdhari_ini"),
+            "jml_target": get_val("jml_target"),
+            "jml_sdhari_ini": get_val("jml_sdhari_ini"),
+            "jml_hari_ini": get_val("jml_hari_ini"),
+            "jml_kurang": get_val("jml_kurang"),
+            "jml_target_non": get_val("jml_target_non"),
+            "jml_sdhari_ini_non": get_val("jml_sdhari_ini_non"),
+            "jml_hari_kerja": get_val("jml_hari_kerja"),
+        }
+
+        print("SUKSES! Data berhasil ditarik:", new_data)
+        return new_data
 
     except Exception as e:
-        print(f"GAGAL SAAT MENGAMBIL API: {str(e)}")
+        print(f"GAGAL SAAT SCRAPING: {str(e)}")
         return None
     finally:
         driver.quit()
