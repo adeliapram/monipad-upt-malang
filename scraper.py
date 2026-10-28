@@ -43,11 +43,12 @@ def scrape_data():
         print("4. Menunggu proses login selesai...")
         time.sleep(7)
 
-        print("5. Membuka halaman dashboard utama secara langsung...")
+       print("5. Membuka halaman dashboard UPT...")
+        # Mengarahkan langsung ke halaman khusus UPT tempat data Anda berada
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
 
-        print("Menunggu myDash.js selesai merender data...")
-        time.sleep(10) # Beri waktu stabil 10 detik agar data AJAX selesai dimuat
+        print("Menunggu data UPT selesai dirender...")
+        time.sleep(10) # Beri waktu stabil 10 detik
 
         print("Mengambil data langsung dari elemen halaman...")
         
