@@ -53,8 +53,13 @@ def scrape_data():
         
         def get_val(element_id):
             try:
-                val = driver.execute_script(f"var el = document.getElementById('{element_id}'); return el ? el.innerText : '0';")
-                return val.strip() if val else "0"
+                # Menggunakan JavaScript untuk memastikan kita mengambil teks dari elemen atau anak elemennya
+                val = driver.execute_script(f"""
+                    var el = document.getElementById('{element_id}');
+                    if (!el) return '0';
+                    return el.innerText ? el.innerText.trim() : (el.textContent ? el.textContent.trim() : '0');
+                """)
+                return val if val else "0"
             except:
                 return "0"
 
