@@ -40,24 +40,31 @@ def scrape_data():
         pass_input = driver.find_element(By.XPATH, '//*[@id="login_pass"]')
 
         print("3. Mengisi kredensial...")
+        user_input.clear()
         user_input.send_keys(USERNAME)
+        pass_input.clear()
         pass_input.send_keys(PASSWORD)
-        pass_input.send_keys(Keys.RETURN)
 
-        print("4. Menunggu proses login selesai...")
-        time.sleep(7)
+        print("4. Mengklik tombol login & menunggu proses selesai...")
+        # Menggunakan JavaScript untuk men-submit form agar lebih andal di headless mode
+        driver.execute_script("document.querySelector('form').submit();")
+        time.sleep(7) # Tunggu redirect masuk ke dashboard
 
-        print("5. Membuka halaman dashboard UPT...")
-        # Ubah ke halaman spesifik dashboard UPT Anda sesuai menu sidebar MONIPAD
-        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/upt")
-        time.sleep(6) # Beri waktu render lebih lama
+        print("5. Membuka halaman dashboard utama...")
+        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
+        time.sleep(5) # Beri waktu render data AJAX
 
-        # Debugging: Cetak isi teks dari elemen body ke log GitHub Actions
-        print("DEBUG ISI HALAMAN:", driver.find_element(By.TAG_NAME, "body").text[:300])
+        # Cek apakah kita benar-benar sudah masuk (bukan di halaman login lagi)
+        page_body = driver.find_element(By.TAG_NAME, "body").text
+        if "Login" in page_body and "Monitoring PAD" in page_body:
+            print("GAGAL: Masih berada di halaman login! Periksa kembali Username/Password.")
+            return None
+
+        print("Mengambil data langsung dari elemen halaman...")
         
         def get_val(element_id):
             try:
-                return driver.execute_string if False else driver.find_element(By.ID, element_id).text.strip()
+                return driver.find_element(By.ID, element_id).text.strip()
             except:
                 return "0"
 
