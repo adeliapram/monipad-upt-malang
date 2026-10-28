@@ -43,32 +43,55 @@ def scrape_data():
         print("4. Menunggu proses login selesai...")
         time.sleep(5) # Waktu tunggu dikurangi karena tidak perlu merender halaman dashboard penuh
 
-        print("5. Menarik data JSON langsung dari API Internal...")
-        # PENTING: Ganti URL ini dengan Request URL asli dari file getDataTotal di tab Headers
-        api_url = "https://monipad.dipendajatim.go.id/monipad/index.php/main/getDataTotal" 
-
-        # Kita perintahkan Selenium untuk menjalankan Fetch API dari dalam browser
-        driver.set_script_timeout(15)
-        raw_json = driver.execute_async_script(f"""
-            var callback = arguments[arguments.length - 1];
-            fetch('{api_url}', {{
-                headers: {{ 'X-Requested-With': 'XMLHttpRequest' }}
-            }})
-            .then(response => response.json())
-            .then(data => callback(data))
-            .catch(err => callback({{error: err.toString()}}));
-        """)
-
-        if "error" in raw_json:
-            raise Exception(f"Gagal mengambil JSON: {raw_json['error']}")
-
-        print("6. Memetakan data JSON...")
-        # Masuk ke objek "data" dan array "pad"
-        data_pajak = raw_json.get("data", {}).get("pad", [])
+        print("5. Membuka halaman dashboard UPT...")
+        # Tetap buka halaman dashboard agar sesi aktif dan file jQuery bawaan web ikut dimuat
+        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
         
-        # Berdasarkan respons JSON Anda, "Total" ada di indeks ke-7 (NO: 8)
-        data_total = data_pajak[7] if len(data_pajak) > 7 else {}
-        sisahari = raw_json.get("data", {}).get("sisahari", {})
+        print("Menunggu halaman stabil...")
+        time.sleep(4) 
+
+        print("6. Mengambil data JSON via Injeksi AJAX...")
+        # GANTI URL INI dengan URL lengkap 'getDataTotal' dari tab Network Anda
+        API_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/path_ke_getDataTotal"
+        
+        # Wajib menaikkan batas waktu tunggu untuk proses asinkron
+        driver.set_script_timeout(15)
+        
+        # Memerintahkan browser untuk mengambil API tersebut
+        raw_response = driver.execute_async_script("""
+            var target_url = arguments[0];
+            var callback = arguments[arguments.length - 1];
+            
+            // Gunakan jQuery AJAX yang sudah tersedia di website aslinya
+            $.ajax({
+                url: target_url,
+                type: 'POST', // Biasanya API pengambilan data ini menggunakan POST
+                dataType: 'text', // Ambil mentahnya (raw text)
+                success: function(response) {
+                    callback(response);
+                },
+                error: function(xhr, status, error) {
+                    // Jika ditolak menggunakan POST, coba otomatis gunakan GET
+                    $.ajax({
+                        url: target_url,
+                        type: 'GET',
+                        dataType: 'text',
+                        success: function(res) { callback(res); },
+                        error: function(x, s, e) { callback("ERROR_AJAX"); }
+                    });
+                }
+            });
+        """, API_URL)
+
+        if raw_response == "ERROR_AJAX":
+            raise Exception("Gagal menarik data via AJAX. Pastikan API_URL sudah benar.")
+
+        print("Parsing teks mentah ke JSON...")
+        parsed_data = json.loads(raw_response)
+        
+        # Berdasarkan response Anda, data "Total" ada di indeks ke-7
+        data_total = parsed_data["data"]["pad"][7]
+        data_sisahari = parsed_data["data"]["sisahari"]
 
         new_data = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -78,12 +101,11 @@ def scrape_data():
             "jml_hari_ini": data_total.get("HRINI", "0"),
             "jml_kurang": data_total.get("KURANG", "0"),
             
-            # Jika variabel "_non" berasal dari endpoint API lain, Anda bisa biarkan 0 
-            # atau melakukan fetch ke endpoint kedua dengan cara yang sama seperti di atas.
+            # Isi manual atau ekstrak dari key lain jika ada
             "jml_target_non": "0", 
-            "jml_sdhari_ini_non": "0", 
+            "jml_sdhari_ini_non": "0",
             
-            "jml_hari_kerja": sisahari.get("JMLHRSISAKERJA", "0"),
+            "jml_hari_kerja": data_sisahari.get("JMLHRSISAKERJA", "0")
         }
 
         print("SUKSES! Data berhasil ditarik:", new_data)
