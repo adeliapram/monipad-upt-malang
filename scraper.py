@@ -64,7 +64,9 @@ def scrape_data():
         
         def get_val(element_id):
             try:
-                return driver.find_element(By.ID, element_id).text.strip()
+                # Menggunakan JavaScript untuk mengambil innerText langsung dari elemen berdasarkan ID
+                val = driver.execute_script(f"var el = document.getElementById('{element_id}'); return el ? el.innerText : '0';")
+                return val.strip() if val else "0"
             except:
                 return "0"
 
