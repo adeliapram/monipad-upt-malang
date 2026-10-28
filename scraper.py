@@ -46,13 +46,8 @@ def scrape_data():
         print("5. Membuka halaman dashboard...")
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
 
-        print("Menunggu myDash.js selesai merender data ke dalam elemen...")
-        # Explicit Wait: Menunggu sampai teks di dalam #pro_sdhari_ini berubah dan tidak kosong/0
-        WebDriverWait(driver, 20).until(
-            lambda d: d.find_element(By.ID, "pro_sdhari_ini").text.strip() != "" and 
-                      d.find_element(By.ID, "pro_sdhari_ini").text.strip() != "0"
-        )
-        time.sleep(2) # Jeda ekstra sebentar agar semua card lain stabil
+        print("Menunggu myDash.js selesai merender data...")
+        time.sleep(8) # Beri waktu 8 detik bagi myDash.js untuk mengisi seluruh elemen DOM
 
         print("Mengambil data langsung dari elemen halaman...")
         
