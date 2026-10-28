@@ -47,12 +47,13 @@ def scrape_data():
         print("4. Menunggu proses login selesai...")
         time.sleep(7)
 
-        print("5. Membuka halaman dashboard dan menunggu data dirender...")
-        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
-        time.sleep(5) # Beri waktu browser memuat data AJAX/jQuery
+        print("5. Membuka halaman dashboard UPT...")
+        # Ubah ke halaman spesifik dashboard UPT Anda sesuai menu sidebar MONIPAD
+        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/upt")
+        time.sleep(6) # Beri waktu render lebih lama
 
-        # Mengambil data langsung dari elemen HTML yang sudah terisi menggunakan JavaScript browser
-        print("Mengambil data langsung dari elemen halaman...")
+        # Debugging: Cetak isi teks dari elemen body ke log GitHub Actions
+        print("DEBUG ISI HALAMAN:", driver.find_element(By.TAG_NAME, "body").text[:300])
         
         def get_val(element_id):
             try:
