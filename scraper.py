@@ -50,46 +50,41 @@ def scrape_data():
         print("Menunggu halaman stabil...")
         time.sleep(4) 
 
-        print("6. Mengambil data JSON via Injeksi AJAX...")
-        # GANTI URL INI dengan URL lengkap 'getDataTotal' dari tab Network Anda
-        API_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/path_ke_getDataTotal"
-        
-        # Wajib menaikkan batas waktu tunggu untuk proses asinkron
+        print("6. Mengambil data JSON via Injeksi Fetch...")
         driver.set_script_timeout(15)
-        
-        # Memerintahkan browser untuk mengambil API tersebut
-        raw_response = driver.execute_async_script("""
-            var target_url = arguments[0];
+
+        # Siapkan wadah JavaScript-nya
+        fetch_script = """
             var callback = arguments[arguments.length - 1];
             
-            // Gunakan jQuery AJAX yang sudah tersedia di website aslinya
-            $.ajax({
-                url: target_url,
-                type: 'POST', // Biasanya API pengambilan data ini menggunakan POST
-                dataType: 'text', // Ambil mentahnya (raw text)
-                success: function(response) {
-                    callback(response);
-                },
-                error: function(xhr, status, error) {
-                    // Jika ditolak menggunakan POST, coba otomatis gunakan GET
-                    $.ajax({
-                        url: target_url,
-                        type: 'GET',
-                        dataType: 'text',
-                        success: function(res) { callback(res); },
-                        error: function(x, s, e) { callback("ERROR_AJAX"); }
-                    });
-                }
-            });
-        """, API_URL)
+            // --- PASTE HASIL 'COPY AS FETCH' ANDA DI BAWAH BARIS INI ---
+            
+            fetch("https://monipad.dipendajatim.go.id/monipad/index.php/...", {
+              "headers": {
+                "accept": "application/json, text/javascript, */*; q=0.01",
+                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+                // ... (ini hanya contoh, biarkan hasil paste Anda apa adanya)
+              },
+              "body": "kdcabang=11&tgl=2026-10-28", // contoh payload asli
+              "method": "POST"
+            })
+            
+            // --- BATAS PASTE (JANGAN HAPUS KODE DI BAWAH INI) ---
+            
+            .then(res => res.text())
+            .then(data => callback(data))
+            .catch(err => callback("ERROR_AJAX"));
+        """
+        
+        raw_response = driver.execute_async_script(fetch_script)
 
         if raw_response == "ERROR_AJAX":
-            raise Exception("Gagal menarik data via AJAX. Pastikan API_URL sudah benar.")
+            raise Exception("Gagal menarik data. Server masih menolak request.")
 
         print("Parsing teks mentah ke JSON...")
         parsed_data = json.loads(raw_response)
         
-        # Berdasarkan response Anda, data "Total" ada di indeks ke-7
+        # Ekstrak data (Pastikan struktur indeks [7] masih sesuai untuk 'Total')
         data_total = parsed_data["data"]["pad"][7]
         data_sisahari = parsed_data["data"]["sisahari"]
 
@@ -101,7 +96,6 @@ def scrape_data():
             "jml_hari_ini": data_total.get("HRINI", "0"),
             "jml_kurang": data_total.get("KURANG", "0"),
             
-            # Isi manual atau ekstrak dari key lain jika ada
             "jml_target_non": "0", 
             "jml_sdhari_ini_non": "0",
             
