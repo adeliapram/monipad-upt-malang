@@ -38,16 +38,22 @@ def scrape_data():
         print("3. Mengisi kredensial...")
         user_input.send_keys(USERNAME)
         pass_input.send_keys(PASSWORD)
-        pass_input.send_keys(Keys.RETURN) # Menggunakan Keys.RETURN yang terbukti sukses login
+        pass_input.send_keys(Keys.RETURN)
 
         print("4. Menunggu proses login selesai...")
         time.sleep(7)
 
-        print("5. Membuka halaman dashboard dan menunggu data dirender...")
+        print("5. Membuka halaman dashboard...")
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
-        time.sleep(5) 
 
-        # Mengambil data langsung menggunakan JavaScript agar akurat membaca DOM browser
+        print("Menunggu myDash.js selesai merender data ke dalam elemen...")
+        # Explicit Wait: Menunggu sampai teks di dalam #pro_sdhari_ini berubah dan tidak kosong/0
+        WebDriverWait(driver, 20).until(
+            lambda d: d.find_element(By.ID, "pro_sdhari_ini").text.strip() != "" and 
+                      d.find_element(By.ID, "pro_sdhari_ini").text.strip() != "0"
+        )
+        time.sleep(2) # Jeda ekstra sebentar agar semua card lain stabil
+
         print("Mengambil data langsung dari elemen halaman...")
         
         def get_val(element_id):
