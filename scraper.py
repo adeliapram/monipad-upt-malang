@@ -43,17 +43,18 @@ def scrape_data():
         print("4. Menunggu proses login selesai...")
         time.sleep(7)
 
-        print("5. Membuka halaman dashboard...")
+        print("5. Membuka halaman dashboard utama secara langsung...")
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
 
         print("Menunggu myDash.js selesai merender data...")
-        time.sleep(8) # Beri waktu 8 detik bagi myDash.js untuk mengisi seluruh elemen DOM
+        # Memberikan waktu tunggu eksplisit hingga elemen target terisi teks dan bukan '0'
+        wait.until(lambda d: d.execute_script("var el = document.getElementById('pro_sdhari_ini'); return el && el.innerText.trim() !== '' && el.innerText.trim() !== '0';"))
+        time.sleep(3) # Jeda ekstra agar seluruh tabel card lainnya stabil
 
         print("Mengambil data langsung dari elemen halaman...")
         
         def get_val(element_id):
             try:
-                # Menggunakan JavaScript untuk memastikan kita mengambil teks dari elemen atau anak elemennya
                 val = driver.execute_script(f"""
                     var el = document.getElementById('{element_id}');
                     if (!el) return '0';
