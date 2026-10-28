@@ -39,15 +39,22 @@ def scrape_data():
         user_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="login_user"]')))
         pass_input = driver.find_element(By.XPATH, '//*[@id="login_pass"]')
 
-        print("3. Mengisi kredensial...")
+       print("3. Mengisi kredensial...")
         user_input.clear()
         user_input.send_keys(USERNAME)
         pass_input.clear()
         pass_input.send_keys(PASSWORD)
 
-        print("4. Mengklik tombol login & menunggu proses selesai...")
-        # Menggunakan JavaScript untuk men-submit form agar lebih andal di headless mode
-        driver.execute_script("document.querySelector('form').submit();")
+        print("4. Mencari dan mengklik tombol login...")
+        try:
+            # Mencari tombol login berdasarkan tipe submit atau teks di dalamnya
+            login_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit'], .btn-primary")
+            login_btn.click()
+        except:
+            # Jika tidak ketemu, gunakan tombol Enter pada password field
+            pass_input.send_keys(Keys.RETURN)
+
+        print("Menunggu proses login selesai...")
         time.sleep(7) # Tunggu redirect masuk ke dashboard
 
         print("5. Membuka halaman dashboard utama...")
