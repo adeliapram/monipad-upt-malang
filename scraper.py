@@ -48,27 +48,23 @@ def scrape_data():
         time.sleep(7)
 
         print("5. Mengambil data langsung dari Endpoint API...")
-        # Selenium membuka URL API JSON secara langsung karena cookie login sudah aktif di browser
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main/getDataTotal")
         time.sleep(3)
         
-        # Mengambil teks JSON mentah dari halaman API tersebut
-        raw_text = driver.find_element(By.TAG_NAME, "body").text
-        api_json = json.loads(raw_text) # Mengubah teks menjadi dictionary Python
+        # Mengambil elemen pre atau body untuk memastikan bersih dari tag HTML
+        body_element = driver.find_element(By.TAG_NAME, "body")
+        raw_text = body_element.text.strip()
+        
+        # Jika teks terbungkus tag HTML pre, ambil teks dalamnya
+        try:
+            pre_element = driver.find_element(By.TAG_NAME, "pre")
+            if pre_element:
+                raw_text = pre_element.text.strip()
+        except:
+            pass
 
-        # Menyusun data dari hasil JSON API
-        new_data = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            # Ambil properti sesuai struktur JSON asli dari API MONIPAD
-            "pro_sdhari_ini": api_json.get("pro_sdhari_ini", "0"),
-            "jml_target": api_json.get("jml_target", "0"),
-            "jml_sdhari_ini": api_json.get("jml_sdhari_ini", "0"),
-            "jml_hari_ini": api_json.get("jml_hari_ini", "0"),
-            "jml_kurang": api_json.get("jml_kurang", "0"),
-        }
-
-        print("SUKSES! Data API berhasil ditarik:", new_data)
-        return new_data
+        print(f"DEBUG MENTAH API: {raw_text[:100]}...") # Cek isi data di log GitHub
+        api_json = json.loads(raw_text)
 
     except Exception as e:
         print(f"GAGAL SAAT MENGAMBIL API: {str(e)}")
