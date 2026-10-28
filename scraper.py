@@ -36,35 +36,22 @@ def scrape_data():
         pass_input = driver.find_element(By.XPATH, '//*[@id="login_pass"]')
 
         print("3. Mengisi kredensial...")
-        user_input.clear()
         user_input.send_keys(USERNAME)
-        pass_input.clear()
         pass_input.send_keys(PASSWORD)
+        pass_input.send_keys(Keys.RETURN) # Menggunakan Keys.RETURN yang terbukti sukses login
 
-        print("4. Mencari dan mengklik tombol login...")
-        try:
-            login_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit'], .btn-primary")
-            login_btn.click()
-        except:
-            pass_input.send_keys(Keys.RETURN)
-
-        print("Menunggu proses login selesai...")
+        print("4. Menunggu proses login selesai...")
         time.sleep(7)
 
-        print("5. Membuka halaman dashboard utama...")
+        print("5. Membuka halaman dashboard dan menunggu data dirender...")
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
-        time.sleep(5)
+        time.sleep(5) 
 
-        page_body = driver.find_element(By.TAG_NAME, "body").text
-        if "Login" in page_body and "Monitoring PAD" in page_body:
-            print("GAGAL: Masih berada di halaman login! Periksa kembali Username/Password.")
-            return None
-
+        # Mengambil data langsung menggunakan JavaScript agar akurat membaca DOM browser
         print("Mengambil data langsung dari elemen halaman...")
         
         def get_val(element_id):
             try:
-                # Menggunakan JavaScript untuk mengambil innerText langsung dari elemen berdasarkan ID
                 val = driver.execute_script(f"var el = document.getElementById('{element_id}'); return el ? el.innerText : '0';")
                 return val.strip() if val else "0"
             except:
