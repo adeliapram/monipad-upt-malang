@@ -50,60 +50,84 @@ def scrape_data():
         print("Menunggu halaman stabil...")
         time.sleep(4) 
 
-        print("6. Mengambil data JSON via Injeksi Fetch...")
+        print("6. Mengambil berbagai data JSON via Injeksi Fetch...")
         driver.set_script_timeout(15)
 
-        # Siapkan wadah JavaScript-nya
-        fetch_script = """
-            var callback = arguments[arguments.length - 1];
-            
-            // --- PASTE HASIL 'COPY AS FETCH' ANDA DI BAWAH BARIS INI ---
-            
-            fetch("https://monipad.dipendajatim.go.id/monipad/index.php/...", {
-              "headers": {
-                "accept": "application/json, text/javascript, */*; q=0.01",
-                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-                // ... (ini hanya contoh, biarkan hasil paste Anda apa adanya)
-              },
-              "body": "kdcabang=11&tgl=2026-10-28", // contoh payload asli
+        # Fungsi bantuan untuk menjalankan Fetch dan mengubahnya ke JSON
+        def fetch_api(kode_fetch):
+            js_script = f"""
+                var callback = arguments[arguments.length - 1];
+                
+                {kode_fetch}
+                
+                .then(res => res.text())
+                .then(data => callback(data))
+                .catch(err => callback("ERROR_AJAX"));
+            """
+            raw_resp = driver.execute_async_script(js_script)
+            if raw_resp == "ERROR_AJAX":
+                print("Ada API yang gagal ditarik.")
+                return None
+            return json.loads(raw_resp)
+
+        # ==========================================
+        # 1. AMBIL DATA TOTAL
+        # Paste hasil "Copy as fetch" dari getDataTotal di sini (tanpa titik koma di akhir)
+        # ==========================================
+        script_fetch_total = """
+            fetch("https://monipad.dipendajatim.go.id/...", {
+              "headers": {...},
+              "body": "...",
               "method": "POST"
             })
-            
-            // --- BATAS PASTE (JANGAN HAPUS KODE DI BAWAH INI) ---
-            
-            .then(res => res.text())
-            .then(data => callback(data))
-            .catch(err => callback("ERROR_AJAX"));
         """
-        
-        raw_response = driver.execute_async_script(fetch_script)
+        json_total = fetch_api(script_fetch_total)
 
-        if raw_response == "ERROR_AJAX":
-            raise Exception("Gagal menarik data. Server masih menolak request.")
+        # ==========================================
+        # 2. AMBIL DATA HARIAN (Opsional)
+        # Paste hasil "Copy as fetch" dari getDataHarian di sini
+        # ==========================================
+        script_fetch_harian = """
+            fetch("https://monipad.dipendajatim.go.id/...", {
+              "headers": {...},
+              "body": "...",
+              "method": "POST"
+            })
+        """
+        json_harian = fetch_api(script_fetch_harian)
 
-        print("Parsing teks mentah ke JSON...")
-        parsed_data = json.loads(raw_response)
-        
-        # Ekstrak data (Pastikan struktur indeks [7] masih sesuai untuk 'Total')
-        data_total = parsed_data["data"]["pad"][7]
-        data_sisahari = parsed_data["data"]["sisahari"]
+        # Anda bisa menambahkan script_fetch_bulanan, dll dengan cara yang sama...
 
-        new_data = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "pro_sdhari_ini": data_total.get("PROSEN", "0"),
-            "jml_target": data_total.get("TARGET", "0"),
-            "jml_sdhari_ini": data_total.get("JUMLAH", "0"),
-            "jml_hari_ini": data_total.get("HRINI", "0"),
-            "jml_kurang": data_total.get("KURANG", "0"),
+        # ==========================================
+        # 3. GABUNGKAN SEMUA DATA
+        # ==========================================
+        if json_total:
+            # Sesuaikan indeks [7] dengan posisi "Total" di dalam JSON pad Anda
+            data_total = json_total["data"]["pad"][7] 
+            data_sisahari = json_total["data"]["sisahari"]
             
-            "jml_target_non": "0", 
-            "jml_sdhari_ini_non": "0",
-            
-            "jml_hari_kerja": data_sisahari.get("JMLHRSISAKERJA", "0")
-        }
+            # Jika json_harian ada, Anda juga bisa mengekstrak isinya di sini
+            # data_harian_tertentu = json_harian["data"][...] 
 
-        print("SUKSES! Data berhasil ditarik:", new_data)
-        return new_data
+            new_data = {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "pro_sdhari_ini": data_total.get("PROSEN", "0"),
+                "jml_target": data_total.get("TARGET", "0"),
+                "jml_sdhari_ini": data_total.get("JUMLAH", "0"),
+                "jml_hari_ini": data_total.get("HRINI", "0"),
+                "jml_kurang": data_total.get("KURANG", "0"),
+                
+                # Anda bisa mengisi ini dari json_harian atau file fetch lainnya
+                "jml_target_non": "0", 
+                "jml_sdhari_ini_non": "0",
+                
+                "jml_hari_kerja": data_sisahari.get("JMLHRSISAKERJA", "0")
+            }
+
+            print("SUKSES! Semua data berhasil digabung:", new_data)
+            return new_data
+        else:
+            raise Exception("Gagal menarik data utama (Total).")
 
     except Exception as e:
         print(f"GAGAL SAAT SCRAPING: {str(e)}")
