@@ -13,12 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 LOGIN_URL = "https://monipad.dipendajatim.go.id/monipad/"
-# Contoh endpoint API untuk data total yang Anda temukan di Network Inspect
-API_URL = "https://monipad.dipendajatim.go.id/monipad/index.php/main/getDataTotal" # Sesuaikan endpoint utamanya
-
 USERNAME = os.environ.get("MONIPAD_USER")
 PASSWORD = os.environ.get("MONIPAD_PASS")
-
 DATA_FILE = "data.json"
 
 def scrape_data():
@@ -39,7 +35,7 @@ def scrape_data():
         user_input = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="login_user"]')))
         pass_input = driver.find_element(By.XPATH, '//*[@id="login_pass"]')
 
-       print("3. Mengisi kredensial...")
+        print("3. Mengisi kredensial...")
         user_input.clear()
         user_input.send_keys(USERNAME)
         pass_input.clear()
@@ -47,21 +43,18 @@ def scrape_data():
 
         print("4. Mencari dan mengklik tombol login...")
         try:
-            # Mencari tombol login berdasarkan tipe submit atau teks di dalamnya
             login_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit'], .btn-primary")
             login_btn.click()
         except:
-            # Jika tidak ketemu, gunakan tombol Enter pada password field
             pass_input.send_keys(Keys.RETURN)
 
         print("Menunggu proses login selesai...")
-        time.sleep(7) # Tunggu redirect masuk ke dashboard
+        time.sleep(7)
 
         print("5. Membuka halaman dashboard utama...")
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
-        time.sleep(5) # Beri waktu render data AJAX
+        time.sleep(5)
 
-        # Cek apakah kita benar-benar sudah masuk (bukan di halaman login lagi)
         page_body = driver.find_element(By.TAG_NAME, "body").text
         if "Login" in page_body and "Monitoring PAD" in page_body:
             print("GAGAL: Masih berada di halaman login! Periksa kembali Username/Password.")
@@ -115,7 +108,6 @@ def main():
     old_vals = old_history.get("current", {})
     logs = old_history.get("logs", [])
 
-    # Deteksi perubahan untuk log notifikasi
     if "jml_sdhari_ini" in old_vals and "jml_sdhari_ini" in current_data:
         try:
             clean_old = float(str(old_vals["jml_sdhari_ini"]).replace(".", "").replace(",", ".").replace("Rp", "").strip() or 0)
