@@ -41,38 +41,49 @@ def scrape_data():
         pass_input.send_keys(Keys.RETURN)
 
         print("4. Menunggu proses login selesai...")
-        time.sleep(7)
+        time.sleep(5) # Waktu tunggu dikurangi karena tidak perlu merender halaman dashboard penuh
 
-       print("5. Membuka halaman dashboard UPT...")
-        # Mengarahkan langsung ke halaman khusus UPT tempat data Anda berada
-        driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
+        print("5. Menarik data JSON langsung dari API Internal...")
+        # PENTING: Ganti URL ini dengan Request URL asli dari file getDataTotal di tab Headers
+        api_url = "https://monipad.dipendajatim.go.id/monipad/index.php/main/getDataTotal" 
 
-        print("Menunggu data UPT selesai dirender...")
-        time.sleep(10) # Beri waktu stabil 10 detik
+        # Kita perintahkan Selenium untuk menjalankan Fetch API dari dalam browser
+        driver.set_script_timeout(15)
+        raw_json = driver.execute_async_script(f"""
+            var callback = arguments[arguments.length - 1];
+            fetch('{api_url}', {{
+                headers: {{ 'X-Requested-With': 'XMLHttpRequest' }}
+            }})
+            .then(response => response.json())
+            .then(data => callback(data))
+            .catch(err => callback({{error: err.toString()}}));
+        """)
 
-        print("Mengambil data langsung dari elemen halaman...")
+        if "error" in raw_json:
+            raise Exception(f"Gagal mengambil JSON: {raw_json['error']}")
+
+        print("6. Memetakan data JSON...")
+        # Masuk ke objek "data" dan array "pad"
+        data_pajak = raw_json.get("data", {}).get("pad", [])
         
-        def get_val(element_id):
-            try:
-                val = driver.execute_script(f"""
-                    var el = document.getElementById('{element_id}');
-                    if (!el) return '0';
-                    return el.innerText ? el.innerText.trim() : (el.textContent ? el.textContent.trim() : '0');
-                """)
-                return val if val else "0"
-            except:
-                return "0"
+        # Berdasarkan respons JSON Anda, "Total" ada di indeks ke-7 (NO: 8)
+        data_total = data_pajak[7] if len(data_pajak) > 7 else {}
+        sisahari = raw_json.get("data", {}).get("sisahari", {})
 
         new_data = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "pro_sdhari_ini": get_val("pro_sdhari_ini"),
-            "jml_target": get_val("jml_target"),
-            "jml_sdhari_ini": get_val("jml_sdhari_ini"),
-            "jml_hari_ini": get_val("jml_hari_ini"),
-            "jml_kurang": get_val("jml_kurang"),
-            "jml_target_non": get_val("jml_target_non"),
-            "jml_sdhari_ini_non": get_val("jml_sdhari_ini_non"),
-            "jml_hari_kerja": get_val("jml_hari_kerja"),
+            "pro_sdhari_ini": data_total.get("PROSEN", "0"),
+            "jml_target": data_total.get("TARGET", "0"),
+            "jml_sdhari_ini": data_total.get("JUMLAH", "0"),
+            "jml_hari_ini": data_total.get("HRINI", "0"),
+            "jml_kurang": data_total.get("KURANG", "0"),
+            
+            # Jika variabel "_non" berasal dari endpoint API lain, Anda bisa biarkan 0 
+            # atau melakukan fetch ke endpoint kedua dengan cara yang sama seperti di atas.
+            "jml_target_non": "0", 
+            "jml_sdhari_ini_non": "0", 
+            
+            "jml_hari_kerja": sisahari.get("JMLHRSISAKERJA", "0"),
         }
 
         print("SUKSES! Data berhasil ditarik:", new_data)
