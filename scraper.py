@@ -47,9 +47,7 @@ def scrape_data():
         driver.get("https://monipad.dipendajatim.go.id/monipad/index.php/main")
 
         print("Menunggu myDash.js selesai merender data...")
-        # Memberikan waktu tunggu eksplisit hingga elemen target terisi teks dan bukan '0'
-        wait.until(lambda d: d.execute_script("var el = document.getElementById('pro_sdhari_ini'); return el && el.innerText.trim() !== '' && el.innerText.trim() !== '0';"))
-        time.sleep(3) # Jeda ekstra agar seluruh tabel card lainnya stabil
+        time.sleep(10) # Beri waktu stabil 10 detik agar data AJAX selesai dimuat
 
         print("Mengambil data langsung dari elemen halaman...")
         
